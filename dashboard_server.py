@@ -40,9 +40,9 @@ def _build_range():
 
 def _do_refresh():
     env    = mpd.load_env()
-    db_url = env.get('DATABASE_URL')
+    db_url = env.get('DATABASE_URL') or os.environ.get('DATABASE_URL')
     if not db_url:
-        raise RuntimeError('DATABASE_URL not found in env file')
+        raise RuntimeError('DATABASE_URL not set')
     start_utc, end_utc, start_label, end_label = _build_range()
     mpd.run_once(db_url, start_utc, end_utc, start_label, end_label)
 
