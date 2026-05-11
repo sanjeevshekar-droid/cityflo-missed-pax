@@ -1,0 +1,7 @@
+psycopg2-binary
+tabulate
+requests
+openai-whisper
+ffmpeg-python
+flask
+openpyxl
