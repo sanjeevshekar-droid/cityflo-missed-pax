@@ -23,8 +23,9 @@ FROM_DATE  = '2026-03-02'   # fixed start date for the dashboard
 IST        = mpd.IST
 
 app = Flask(__name__)
-_lock       = threading.Lock()
-_refreshing = False
+_lock         = threading.Lock()
+_refreshing   = False
+_startup_error = None
 
 
 def _build_range():
@@ -56,6 +57,13 @@ def chart_js():
 @app.route('/')
 def index():
     if not os.path.exists(mpd.OUT_FILE):
+        if _startup_error:
+            return f'''<html><head><meta http-equiv="refresh" content="30"></head>
+<body style="background:#0f1117;color:#eee;font-family:sans-serif;padding:60px;text-align:center">
+<h2 style="color:#ef5350">&#9888; Dashboard failed to load</h2>
+<p style="color:#aaa;max-width:600px;margin:auto">{_startup_error}</p>
+<p style="color:#555;margin-top:20px">Click <b>Refresh Data</b> button once the issue is resolved, or wait — page retries in 30s.</p>
+</body></html>'''
         return '''<html><head><meta http-equiv="refresh" content="5"></head>
 <body style="background:#0f1117;color:#eee;font-family:sans-serif;padding:60px;text-align:center">
 <h2 style="color:#4fc3f7">&#8635; Loading dashboard data...</h2>
@@ -97,10 +105,13 @@ def api_status():
 
 
 def _background_startup():
+    global _startup_error
     try:
         _do_refresh()
+        _startup_error = None
         print('  Initial data fetch complete.')
     except Exception as e:
+        _startup_error = str(e)
         print(f'  WARNING: Initial fetch failed: {e}')
 
 if __name__ == '__main__':

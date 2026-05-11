@@ -336,7 +336,7 @@ def load_excel_supplement(excel_path, start_date):
 
 
 def fetch_data(db_url, start_utc, end_utc, excel_supplement=None):
-    conn = psycopg2.connect(db_url)
+    conn = psycopg2.connect(db_url, connect_timeout=20)
     cur  = conn.cursor()
 
     # 1. Sage tickets with relevant slugs (primary — most accurate)
