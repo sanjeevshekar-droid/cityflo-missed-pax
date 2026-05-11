@@ -56,8 +56,11 @@ def chart_js():
 @app.route('/')
 def index():
     if not os.path.exists(mpd.OUT_FILE):
-        return '<html><body style="background:#0f1117;color:#eee;font-family:sans-serif;padding:40px">' \
-               '<h2>Dashboard not yet generated. Please wait a moment and refresh.</h2></body></html>'
+        return '''<html><head><meta http-equiv="refresh" content="5"></head>
+<body style="background:#0f1117;color:#eee;font-family:sans-serif;padding:60px;text-align:center">
+<h2 style="color:#4fc3f7">&#8635; Loading dashboard data...</h2>
+<p style="color:#555">Fetching records from database. This page will refresh automatically.</p>
+</body></html>'''
     return send_file(mpd.OUT_FILE)
 
 
@@ -93,20 +96,20 @@ def api_status():
     })
 
 
-if __name__ == '__main__':
-    print('=' * 55)
-    print(f'  Missed Pax Dashboard  —  Live Server')
-    print('=' * 55)
-    print(f'  Fetching initial data from DB ...')
+def _background_startup():
     try:
         _do_refresh()
-        print(f'  Done.  Opening http://localhost:{PORT}')
+        print('  Initial data fetch complete.')
     except Exception as e:
         print(f'  WARNING: Initial fetch failed: {e}')
-        print(f'  Serving whatever HTML exists. Use Refresh button to retry.')
+
+if __name__ == '__main__':
+    # Start refresh in background so Flask binds the port immediately
+    threading.Thread(target=_background_startup, daemon=True).start()
 
     is_local = PORT == 8050 and not os.environ.get('RENDER') and not os.environ.get('RAILWAY_ENVIRONMENT')
     if is_local:
-        threading.Timer(1.5, lambda: webbrowser.open(f'http://localhost:{PORT}')).start()
-    print(f'  Press Ctrl+C to stop the server.\n')
+        threading.Timer(3.0, lambda: webbrowser.open(f'http://localhost:{PORT}')).start()
+
+    print(f'  Missed Pax Dashboard — Live Server on port {PORT}')
     app.run(host='0.0.0.0', port=PORT, debug=False, use_reloader=False, threaded=True)
